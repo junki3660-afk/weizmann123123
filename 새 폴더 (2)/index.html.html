@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>와이즈만 전염병 게임</title>
+<style>
+body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
+h1 { text-align: center; }
+.section { background: #fff; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+input, textarea { width: 100%; margin: 5px 0 10px 0; padding: 5px; }
+button { display: block; margin: auto; padding: 10px 20px; font-size: 16px; }
+#result { white-space: pre-wrap; background: #e0e0e0; padding: 15px; border-radius: 8px; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<h1>와이즈만 전염병 게임</h1>
+
+<!-- 룰 설명 -->
+<div class="section" style="background:#dff0d8;">
+<h2>게임 룰 안내</h2>
+<p>
+두 팀이 서로의 바이러스를 퍼뜨리고 방어합니다.<br>
+1️⃣ 바이러스 특성 포인트(감염력, 잠복기, 치명률, 전파경로) 총 20포인트 배분<br>
+2️⃣ 방어 전략 포인트(격리 위치, 병원치료, 대응속도, 감시, 백신) 총 20포인트 배분<br>
+3️⃣ 게임 시작 버튼 클릭 시 예상 감염자 수, 전략 분석, 승패, 피드백, 스토리 자동 출력<br>
+4️⃣ 총 인구수: 1,220,000명
+</p>
+</div>
+
+<!-- 팀 정보 -->
+<div class="section">
+<h2>팀 정보 입력</h2>
+<label>A팀 이름</label>
+<input id="aTeamName" value="A팀">
+<label>A팀 팀원 (예: 준기(과학자), 병일(의사))</label>
+<input id="aTeamMembers" value="준기(과학자), 병일(의사)">
+<label>B팀 이름</label>
+<input id="bTeamName" value="B팀">
+<label>B팀 팀원 (예: 기혜(아나운서), 유진(연구원))</label>
+<input id="bTeamMembers" value="기혜(아나운서), 유진(연구원)">
+</div>
+
+<!-- 바이러스 -->
+<div class="section">
+<h2>바이러스 입력</h2>
+<label>A팀 바이러스 (예: RNA)</label>
+<input id="aVirus" value="RNA">
+<label>B팀 바이러스 (예: DNA)</label>
+<input id="bVirus" value="DNA">
+
+<label>A팀 바이러스 포인트 (감염력, 잠복기, 치명률, 전파경로) 총 20점</label>
+<input id="aInfec" type="number" value="5">
+<input id="aLatency" type="number" value="5">
+<input id="aFatal" type="number" value="5">
+<input id="aSpread" type="number" value="5">
+
+<label>B팀 바이러스 포인트 (감염력, 잠복기, 치명률, 전파경로) 총 20점</label>
+<input id="bInfec" type="number" value="5">
+<input id="bLatency" type="number" value="5">
+<input id="bFatal" type="number" value="5">
+<input id="bSpread" type="number" value="5">
+</div>
+
+<!-- 대응 전략 -->
+<div class="section">
+<h2>A팀 대응 전략 포인트 입력</h2>
+<p>각 항목별 포인트 합계가 20이 되도록 배분하세요.</p>
+<label>격리 위치 (Isolation, 0~10점)</label>
+<input id="aIso" type="number" min="0" max="10" value="0">
+<label>병원 치료 (Hospital/Treatment, 0~10점)</label>
+<input id="aHosp" type="number" min="0" max="10" value="0">
+<label>대응 속도 (Response Speed, 0~10점)</label>
+<input id="aSpeed" type="number" min="0" max="10" value="0">
+<label>감시 (Surveillance, 0~10점)</label>
+<input id="aSurv" type="number" min="0" max="10" value="0">
+<label>백신 (Vaccine, 0~10점)</label>
+<input id="aVaccine" type="number" min="0" max="10" value="0">
+<textarea id="aDefense" placeholder="A팀 전략 서술"></textarea>
+</div>
+
+<div class="section">
+<h2>B팀 대응 전략 포인트 입력</h2>
+<p>각 항목별 포인트 합계가 20이 되도록 배분하세요.</p>
+<label>격리 위치 (Isolation, 0~10점)</label>
+<input id="bIso" type="number" min="0" max="10" value="0">
+<label>병원 치료 (Hospital/Treatment, 0~10점)</label>
+<input id="bHosp" type="number" min="0" max="10" value="0">
+<label>대응 속도 (Response Speed, 0~10점)</label>
+<input id="bSpeed" type="number" min="0" max="10" value="0">
+<label>감시 (Surveillance, 0~10점)</label>
+<input id="bSurv" type="number" min="0" max="10" value="0">
+<label>백신 (Vaccine, 0~10점)</label>
+<input id="bVaccine" type="number" min="0" max="10" value="0">
+<textarea id="bDefense" placeholder="B팀 전략 서술"></textarea>
+</div>
+
+<button onclick="runGame()">게임 시작</button>
+<div id="result"></div>
+
+<script>
+function calculateVirusPower(type, infec, latency, fatal, spread){
+    type = type.toUpperCase();
+    if(type.includes("RNA")){
+        return infec*0.5 + latency*0.3 + fatal*0.1 + spread*0.1;
+    } else {
+        return infec*0.2 + latency*0.2 + fatal*0.4 + spread*0.2;
+    }
+}
+
+function calculateDefensePower(type, iso, hosp, speed, surv, vaccine){
+    type = type.toUpperCase();
+    if(type.includes("RNA")){
+        return iso*0.35 + speed*0.25 + surv*0.2 + hosp*0.1 + vaccine*0.1;
+    } else {
+        return hosp*0.3 + vaccine*0.3 + iso*0.15 + speed*0.15 + surv*0.1;
+    }
+}
+
+function analyzeStrategy(virusType, defensePoints, defenseText) {
+    let feedback = "";
+    let totalPoints = Object.values(defensePoints).reduce((a,b)=>a+b,0);
+    if(totalPoints < 20) feedback += "⚠️ 방어 포인트가 20점 미만입니다. 일부 전략이 충분히 효과를 발휘하지 못합니다.\n";
+    
+    if(virusType.toUpperCase().includes("RNA")) {
+        if(defensePoints.iso + defensePoints.speed < 10) feedback += "- RNA 바이러스에는 초기 격리와 빠른 대응이 부족했습니다.\n";
+        if(defensePoints.hosp + defensePoints.vaccine < 6) feedback += "- 치명률 관리를 위한 병원/백신 포인트가 낮습니다.\n";
+    } else {
+        if(defensePoints.hosp + defensePoints.vaccine < 10) feedback += "- DNA 바이러스에는 병원과 백신 대응이 부족했습니다.\n";
+        if(defensePoints.iso + defensePoints.speed < 6) feedback += "- 격리 및 대응 속도가 약간 아쉽습니다.\n";
+    }
+
+    feedback += "- 전략 서술: " + defenseText + "\n";
+    return feedback;
+}
+
+function runGame() {
+    const totalPop = 1220000;
+
+    const aVirusType = document.getElementById('aVirus').value;
+    const aInfec = parseInt(document.getElementById('aInfec').value)||0;
+    const aLatency = parseInt(document.getElementById('aLatency').value)||0;
+    const aFatal = parseInt(document.getElementById('aFatal').value)||0;
+    const aSpread = parseInt(document.getElementById('aSpread').value)||0;
+
+    const bVirusType = document.getElementById('bVirus').value;
+    const bInfec = parseInt(document.getElementById('bInfec').value)||0;
+    const bLatency = parseInt(document.getElementById('bLatency').value)||0;
+    const bFatal = parseInt(document.getElementById('bFatal').value)||0;
+    const bSpread = parseInt(document.getElementById('bSpread').value)||0;
+
+    const aVirusPower = calculateVirusPower(aVirusType,aInfec,aLatency,aFatal,aSpread);
+    const bVirusPower = calculateVirusPower(bVirusType,bInfec,bLatency,bFatal,bSpread);
+
+    const aIso = parseInt(document.getElementById('aIso').value)||0;
+    const aHosp = parseInt(document.getElementById('aHosp').value)||0;
+    const aSpeed = parseInt(document.getElementById('aSpeed').value)||0;
+    const aSurv = parseInt(document.getElementById('aSurv').value)||0;
+    const aVaccine = parseInt(document.getElementById('aVaccine').value)||0;
+
+    const bIso = parseInt(document.getElementById('bIso').value)||0;
+    const bHosp = parseInt(document.getElementById('bHosp').value)||0;
+    const bSpeed = parseInt(document.getElementById('bSpeed').value)||0;
+    const bSurv = parseInt(document.getElementById('bSurv').value)||0;
+    const bVaccine = parseInt(document.getElementById('bVaccine').value)||0;
+
+    const aDefensePower = calculateDefensePower(aVirusType,bIso,bHosp,bSpeed,bSurv,bVaccine);
+    const bDefensePower = calculateDefensePower(bVirusType,aIso,aHosp,aSpeed,aSurv,aVaccine);
+
+    const aInfected = Math.floor(totalPop * (aVirusPower / (aVirusPower + aDefensePower)));
+    const bInfected = Math.floor(totalPop * (bVirusPower / (bVirusPower + bDefensePower)));
+
+    const aTeamName = document.getElementById('aTeamName').value;
+    const bTeamName = document.getElementById('bTeamName').value;
+    const aMembers = document.getElementById('aTeamMembers').value;
+    const bMembers = document.getElementById('bTeamMembers').value;
+    const aDefenseText = document.getElementById('aDefense').value;
+    const bDefenseText = document.getElementById('bDefense').value;
+
+    const aFeedback = analyzeStrategy(aVirusType, {iso:aIso, hosp:aHosp, speed:aSpeed, surv:aSurv, vaccine:aVaccine}, aDefenseText);
+    const bFeedback = analyzeStrategy(bVirusType, {iso:bIso, hosp:bHosp, speed:bSpeed, surv:bSurv, vaccine:bVaccine}, bDefenseText);
+
+    let winner = "";
+    if(aInfected > bInfected) winner = bTeamName;
+    else if(bInfected > aInfected) winner = aTeamName;
+    else winner = "무승부";
+
+    let story = `
+도시의 밤, ${aTeamName}(${aMembers})와 ${bTeamName}(${bMembers})의 운명이 걸린 전염병 전쟁이 시작되었다. 
+A팀은 치명적인 ${aVirusType} 바이러스를 퍼뜨리며 은밀히 도시 곳곳으로 확산을 시도했고, 
+B팀은 ${bVirusType} 바이러스의 위협에 맞서 신속하게 방어 전략을 펼쳤다. 
+
+병원에서는 ${bTeamName}의 팀원들이 긴박하게 대응하며 초기 감염자를 격리하고 치료했고, 
+거리 곳곳에서는 ${aTeamName}의 전략이 빛을 발하며 바이러스가 일부 지역을 장악했다. 
+
+숨 막히는 긴장 속에서 포인트 배분과 전략 선택이 결과를 좌우했고, 
+최종적으로 ${aTeamName} 감염자 수: ${aInfected}명, ${bTeamName} 감염자 수: ${bInfected}명.
+
+와이즈만 전염병을 막아라! 프로젝트의 최종 승자는 ${winner}이 되었다.
+`;
+
+
+    let resultText = `--- 게임 결과 ---\n${story}\n--- A팀 전략 분석 ---\n${aFeedback}\n--- B팀 전략 분석 ---\n${bFeedback}`;
+
+    document.getElementById('result').textContent = resultText;
+}
+</script>
+
+</body>
+</html>
