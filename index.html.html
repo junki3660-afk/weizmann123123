@@ -181,8 +181,8 @@ function runGame() {
     const bFeedback = analyzeStrategy(bVirusType, {iso:bIso, hosp:bHosp, speed:bSpeed, surv:bSurv, vaccine:bVaccine}, bDefenseText);
 
     let winner = "";
-    if(aInfected > bInfected) winner = bTeamName;
-    else if(bInfected > aInfected) winner = aTeamName;
+    if(aInfected > bInfected) winner = aTeamName;
+    else if(bInfected > aInfected) winner = bTeamName;
     else winner = "무승부";
 
     let story = `
@@ -208,3 +208,4 @@ B팀은 ${bVirusType} 바이러스의 위협에 맞서 신속하게 방어 전�
 
 </body>
 </html>
+
